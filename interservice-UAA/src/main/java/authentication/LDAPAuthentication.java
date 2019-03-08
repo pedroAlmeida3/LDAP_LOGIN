@@ -1,5 +1,7 @@
 package authentication;
 
+import java.util.List;
+
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -10,9 +12,9 @@ import com.unboundid.ldap.sdk.SearchResult;
 
 public class LDAPAuthentication implements Authentication {
 
-    LdapConfigurations ldapConfig;
+	LdapConfigurations ldapConfig;
 
-    LDAPConnection ldapConnection;
+	LDAPConnection ldapConnection;
 
 	SearchResult searchResult;
 
@@ -47,19 +49,13 @@ public class LDAPAuthentication implements Authentication {
 
 		}
 
-		String[] completeDN = searchCnInDn(searchResult.getSearchEntries().get(0).getDN());
+		String[] completeDN = this.searchCnInDn(searchResult.getSearchEntries().get(0).getDN());
 
-		User user = new User(username, password);
+		Password passwd = new Password(password);
 
-		for (int i = 1; i < completeDN.length; i++) {
-
-			String[] DnWithoutNameField = this.splitByEquals(completeDN[i]);
-			
-
-			if (DnWithoutNameField[0].equals("OU")) {
-				user.getGroups().add(DnWithoutNameField[1]);
-			}
-		}
+		User user = new User(username, passwd);
+		
+		this.getGroupsFromUser(user, completeDN);
 
 		return user;
 
@@ -71,5 +67,18 @@ public class LDAPAuthentication implements Authentication {
 
 	private String[] splitByEquals(String completeCommonName) {
 		return completeCommonName.split("=");
+	}
+
+	private void getGroupsFromUser(User user, String[] completeDN) {
+		
+		for (int i = 1; i < completeDN.length; i++) {
+
+			String[] DnWithoutNameField = this.splitByEquals(completeDN[i]);
+
+			if (DnWithoutNameField[0].equals("OU")) {
+				Role role=new Role(DnWithoutNameField[1]);
+				user.getGroups().add(role);
+			}
+		}
 	}
 }

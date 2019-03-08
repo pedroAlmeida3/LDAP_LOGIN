@@ -1,5 +1,7 @@
 package authentication;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * 
  * @author pedro.almeida
@@ -7,11 +9,15 @@ package authentication;
  */
 public class LocalAuthentication implements Authentication {
 
+	
+
 	@Override
 	public User authenticate(String username, String password) {
-		User u= new User("nao estas no ldap","gfd");
 		
-		return u;
+		
+		UserRepository repo=new UserRepositorioJPAImpl();
+
+		return repo.matchByNamenAndPasswd(username, password);
 	}
 
 }
